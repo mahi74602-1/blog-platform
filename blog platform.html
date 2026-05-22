@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blog Platform with Comments</title>
+
+    <style>
+
+        body{
+            font-family:Arial;
+            background:#f2f2f2;
+            margin:0;
+            padding:0;
+        }
+
+        header{
+            background:#222;
+            color:white;
+            text-align:center;
+            padding:20px;
+        }
+
+        .container{
+            width:80%;
+            margin:auto;
+            margin-top:20px;
+        }
+
+        .box{
+            background:white;
+            padding:20px;
+            margin-bottom:20px;
+            border-radius:10px;
+        }
+
+        input, textarea{
+            width:100%;
+            padding:10px;
+            margin-top:10px;
+            margin-bottom:10px;
+        }
+
+        button{
+            background:#222;
+            color:white;
+            border:none;
+            padding:10px 20px;
+            cursor:pointer;
+        }
+
+        .post{
+            border:1px solid #ccc;
+            padding:15px;
+            margin-top:15px;
+            border-radius:10px;
+        }
+
+        .comment{
+            background:#eee;
+            padding:10px;
+            margin-top:10px;
+            border-radius:5px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header>
+    <h1>Blog Platform with Comments</h1>
+</header>
+
+<div class="container">
+
+    <!-- REGISTER -->
+
+    <div class="box">
+
+        <h2>User Registration</h2>
+
+        <input type="text" id="regUsername" placeholder="Username">
+
+        <input type="email" id="regEmail" placeholder="Email">
+
+        <input type="password" id="regPassword" placeholder="Password">
+
+        <button onclick="register()">Register</button>
+
+    </div>
+
+    <!-- LOGIN -->
+
+    <div class="box">
+
+        <h2>User Login</h2>
+
+        <input type="email" id="loginEmail" placeholder="Email">
+
+        <input type="password" id="loginPassword" placeholder="Password">
+
+        <button onclick="login()">Login</button>
+
+    </div>
+
+    <!-- CREATE POST -->
+
+    <div class="box">
+
+        <h2>Create Blog Post</h2>
+
+        <input type="text" id="title" placeholder="Post Title">
+
+        <textarea id="content" rows="5" placeholder="Write Blog Content"></textarea>
+
+        <button onclick="createPost()">Create Post</button>
+
+    </div>
+
+    <!-- POSTS -->
+
+    <div class="box">
+
+        <h2>All Blog Posts</h2>
+
+        <div id="posts"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+let users = [];
+
+let posts = [];
+
+let currentUser = "";
+
+/* REGISTER */
+
+function register(){
+
+    const username =
+    document.getElementById("regUsername").value;
+
+    const email =
+    document.getElementById("regEmail").value;
+
+    const password =
+    document.getElementById("regPassword").value;
+
+    users.push({
+        username,
+        email,
+        password
+    });
+
+    alert("User Registered Successfully");
+
+}
+
+/* LOGIN */
+
+function login(){
+
+    const email =
+    document.getElementById("loginEmail").value;
+
+    const password =
+    document.getElementById("loginPassword").value;
+
+    const user = users.find(u =>
+        u.email === email &&
+        u.password === password
+    );
+
+    if(user){
+
+        currentUser = user.username;
+
+        alert("Login Successful");
+
+    }else{
+
+        alert("Invalid Email or Password");
+    }
+
+}
+
+/* CREATE POST */
+
+function createPost(){
+
+    if(currentUser === ""){
+
+        alert("Please Login First");
+
+        return;
+    }
+
+    const title =
+    document.getElementById("title").value;
+
+    const content =
+    document.getElementById("content").value;
+
+    posts.push({
+        id:Date.now(),
+        title,
+        content,
+        author:currentUser,
+        comments:[]
+    });
+
+    loadPosts();
+
+    document.getElementById("title").value = "";
+
+    document.getElementById("content").value = "";
+
+}
+
+/* LOAD POSTS */
+
+function loadPosts(){
+
+    let output = "";
+
+    posts.forEach(post => {
+
+        output += `
+
+        <div class="post">
+
+            <h3>${post.title}</h3>
+
+            <p>${post.content}</p>
+
+            <small>
+                Author: ${post.author}
+            </small>
+
+            <br><br>
+
+            <button onclick="editPost(${post.id})">
+                Edit
+            </button>
+
+            <button onclick="deletePost(${post.id})">
+                Delete
+            </button>
+
+            <hr>
+
+            <input
+            type="text"
+            id="comment-${post.id}"
+            placeholder="Write Comment">
+
+            <button onclick="addComment(${post.id})">
+                Add Comment
+            </button>
+
+            <div id="comments-${post.id}">
+
+                ${post.comments.map(c => `
+
+                    <div class="comment">
+
+                        <b>${c.user}</b> :
+                        ${c.text}
+
+                    </div>
+
+                `).join("")}
+
+            </div>
+
+        </div>
+
+        `;
+
+    });
+
+    document.getElementById("posts").innerHTML = output;
+
+}
+
+/* DELETE POST */
+
+function deletePost(id){
+
+    posts = posts.filter(post =>
+        post.id !== id
+    );
+
+    loadPosts();
+
+}
+
+/* EDIT POST */
+
+function editPost(id){
+
+    const post = posts.find(p => p.id === id);
+
+    const newTitle =
+    prompt("Edit Title", post.title);
+
+    const newContent =
+    prompt("Edit Content", post.content);
+
+    if(newTitle && newContent){
+
+        post.title = newTitle;
+
+        post.content = newContent;
+
+        loadPosts();
+    }
+
+}
+
+/* ADD COMMENT */
+
+function addComment(postId){
+
+    if(currentUser === ""){
+
+        alert("Please Login First");
+
+        return;
+    }
+
+    const commentText =
+    document.getElementById(`comment-${postId}`).value;
+
+    const post =
+    posts.find(p => p.id === postId);
+
+    post.comments.push({
+        user:currentUser,
+        text:commentText
+    });
+
+    loadPosts();
+
+}
+
+</script>
+
+</body>
+</html>
